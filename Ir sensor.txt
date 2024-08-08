@@ -1,0 +1,18 @@
+import time as t
+import RPi.GPIO as b
+count=0
+
+b.setwarnings(False)
+b.setmode(b.BOARD)     #led=12, switch=16
+b.setup(16, b.IN)
+
+while(1):
+    st=b.input(16)
+    if(st==0):
+        print('Object is detected')
+        count=count+1
+        t.sleep(1)
+    else:
+        print('Object is not detected')
+        t.sleep(1)
+        print('number of objects is passed is :',count)
