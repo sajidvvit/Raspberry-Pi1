@@ -1,0 +1,143 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdio_ext.h>
+
+struct Bank {
+    int cno; // Customer number
+    char cname[75]; // Customer name
+    float ob; // Opening balance
+    float cb; // Closing balance
+    float ta; // Transaction amount
+    char at; // Account type (S/C)
+    char tt; // Transaction type (W/D)
+};
+
+// Function to update customer details
+void update(struct Bank *std) {
+    printf("Enter customer number:\n");
+    __fpurge(stdin);
+    scanf("%d", &std->cno);
+    printf("Enter name of customer:\n");
+    __fpurge(stdin);
+    scanf("%[^\n]s", std->cname);
+    printf("Enter opening balance:\n");
+    __fpurge(stdin);
+    scanf("%f", &std->ob);
+    std->cb = std->ob; // Initial closing balance is the opening balance
+}
+
+// Function to display customer details
+void disp(struct Bank *std) {
+    printf("Customer number: %d\n", std->cno);
+    printf("Name of customer: %s\n", std->cname);
+    printf("Opening balance: %.2f\n", std->ob);
+    printf("Closing balance: %.2f\n", std->cb);
+    printf("Transaction type: %c\n", std->tt);
+    printf("Transaction amount: %.2f\n", std->ta);
+    printf("Account type: %c\n", std->at);
+}
+
+// Function to create a binary file to store customer details
+void create_binary_file() {
+    FILE *fp;
+    int i, n;
+    struct Bank std;
+
+    fp = fopen("customer_data.dat", "wb"); // Open a binary file in write mode
+    if (!fp) {
+        printf("File is not available\n");
+        exit(0);
+    }
+
+    printf("Number of records you want to store in a binary file:\n");
+    scanf("%d", &n);
+
+    for (i = 0; i < n; i++) {
+        update(&std);
+        printf("Enter account type (S for Saving, A for Current):\n");
+        __fpurge(stdin);
+        scanf(" %c", &std.at);
+        fwrite(&std, sizeof(struct Bank), 1, fp);
+    }
+
+    fclose(fp);
+}
+
+// Function to process transactions and maintain minimum balance
+void process_transactions() {
+    FILE *fp;
+    struct Bank std;
+    float ta;
+    char tt;
+
+    fp = fopen("customer_data.dat", "rb+"); // Open a binary file in read/write mode
+    if (!fp) {
+        printf("File is not available\n");
+        exit(0);
+    }
+
+    while (fread(&std, sizeof(struct Bank), 1, fp) == 1) {
+        printf("Processing customer: %s\n", std.cname);
+        printf("Enter transaction type (W for Withdraw, D for Deposit):\n");
+        __fpurge(stdin);
+        scanf(" %c", &tt);
+        printf("Enter transaction amount:\n");
+        __fpurge(stdin);
+        scanf("%f", &ta);
+
+        if (tt == 'W') {
+            if (std.cb - ta < 10000) {
+                printf("Transaction denied. Minimum balance of Rs. 10000 must be maintained.\n");
+            } else {
+                std.cb -= ta;
+                std.tt = 'W';
+                std.ta = ta;
+                printf("Transaction successful. New balance: %.2f\n", std.cb);
+            }
+        } else if (tt == 'D') {
+            std.cb += ta;
+            std.tt = 'D';
+            std.ta = ta;
+            printf("Transaction successful. New balance: %.2f\n", std.cb);
+        } else {
+            printf("Invalid transaction type.\n");
+        }
+
+        // Move the file pointer to the current record's position
+        fseek(fp, -sizeof(struct Bank), SEEK_CUR);
+        // Update the record with new balance
+        fwrite(&std, sizeof(struct Bank), 1, fp);
+    }
+
+    fclose(fp);
+}
+
+// Function to generate a report for all customers
+void generate_report() {
+    FILE *fp;
+    struct Bank std;
+
+    fp = fopen("customer_data.dat", "rb"); // Open a binary file in read mode
+    if (!fp) {
+        printf("File is not available\n");
+        exit(0);
+    }
+
+    printf("\nCustomer Report:\n");
+    printf("-------------------------------------------------\n");
+
+    while (fread(&std, sizeof(struct Bank), 1, fp) == 1) {
+        disp(&std);
+        printf("-------------------------------------------------\n");
+    }
+
+    fclose(fp);
+}
+
+// Main function to execute all parts
+int main() {
+    create_binary_file();
+    process_transactions();
+    generate_report();
+    return 0;
+}
