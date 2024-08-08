@@ -1,0 +1,56 @@
+import time
+import RPi.GPIO as GPIO
+
+GPIO.setwarnings(False)
+GPIO.setmode(GPIO.BOARD)
+
+# Pin assignments
+trigger = 16
+echo = 18
+led1 = 22
+led2 = 24
+
+# Setup pins
+GPIO.setup(led1, GPIO.OUT)
+GPIO.setup(led2, GPIO.OUT)
+GPIO.setup(trigger, GPIO.OUT)
+GPIO.setup(echo, GPIO.IN)
+
+GPIO.output(led1, GPIO.LOW)
+GPIO.output(led2, GPIO.LOW)
+
+while True:
+    # Send trigger pulse
+    GPIO.output(trigger, GPIO.HIGH)
+    time.sleep(0.00001)
+    GPIO.output(trigger, GPIO.LOW)
+
+    # Wait for echo
+    while GPIO.input(echo) == 0:
+        ini = time.time()
+    while GPIO.input(echo) == 1:
+        fin = time.time()
+
+    # Calculate distance
+    to = fin - ini
+    distance = (34300 * to / 2)
+
+    print("Distance at which object is detected is: %0.1f cm" % distance)
+    dis1 = int(distance)
+
+    # LED control based on distance
+    if dis1 <= 15:
+        for i in range(3):
+            GPIO.output(led1, GPIO.HIGH)
+            time.sleep(1)
+            GPIO.output(led1, GPIO.LOW)
+            time.sleep(1)
+    elif dis1 >= 15:
+        for i in range(2):
+            GPIO.output(led2, GPIO.HIGH)
+            time.sleep(1)
+            GPIO.output(led2, GPIO.LOW)
+            time.sleep(1)
+
+    print("Distance at which object is detected is: %0.1f cm" % distance)
+    time.sleep(3)
