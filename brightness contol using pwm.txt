@@ -1,0 +1,38 @@
+import RPi.GPIO as GPIO
+import time
+
+# Disable GPIO warnings
+GPIO.setwarnings(False)
+
+# Set the GPIO mode
+GPIO.setmode(GPIO.BOARD)
+
+# Set up GPIO pin 3 as an output pin
+GPIO.setup(40, GPIO.OUT)
+
+# Initialize PWM on pin 3 at 100 Hz
+p = GPIO.PWM(40, 100)
+
+# Start PWM with a duty cycle of 0 (off)
+p.start(0)
+
+try:
+    while True:
+        # Increase brightness
+        for x in range(100):
+            p.ChangeDutyCycle(x)  # Change the duty cycle
+            time.sleep(0.03)      # Small delay for smooth transition
+        
+        # Decrease brightness
+        for x in range(100):
+            p.ChangeDutyCycle(100 - x)  # Change the duty cycle
+            time.sleep(0.03)            # Small delay for smooth transition
+
+except KeyboardInterrupt:
+    # Handle the Ctrl+C interruption
+    print("Program interrupted by user.")
+
+finally:
+    # Cleanup GPIO settings before exiting
+    p.stop()
+    GPIO.cleanup()
